@@ -239,7 +239,12 @@ def _bincount(x: Tensor, minlength: Optional[int] = None) -> Tensor:
     Returns:
         Number of occurrences for each unique element in x
     """
-    if x.is_cuda and torch.are_deterministic_algorithms_enabled():
+    is_deterministic_acient = hasattr(torch, "_is_deterministic") and torch._is_deterministic()
+    is_deterministic_old = hasattr(torch, "is_deterministic") and torch.is_deterministic()
+    is_deterministic_new = (
+        hasattr(torch, "are_deterministic_algorithms_enabled") and torch.are_deterministic_algorithms_enabled()
+    )
+    if x.is_cuda and (is_deterministic_old or is_deterministic_new or is_deterministic_acient):
         if minlength is None:
             minlength = len(torch.unique(x))
         output = torch.zeros(minlength, device=x.device, dtype=torch.long)
